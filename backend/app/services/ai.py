@@ -40,6 +40,8 @@ def generate_study_content(title: str, content: str | None, resource_type: str, 
         prompt += "Provide a multiple-choice quiz. Return an array of strings, where each string is strictly formatted exactly as 'Q: <question> | O: <option1>, <option2>, <option3>, <option4> | A: <exact_text_of_correct_option>'."
     elif resource_type == "mindmap":
         prompt += "Create a mind map representing the key concepts and their relationships. Return an array containing exactly one string: the raw mermaid.js graph syntax (e.g. 'graph TD\\n A-->B'). Do NOT wrap it in markdown code blocks."
+    elif resource_type == "podcast":
+        prompt += "Create an engaging, natural-sounding audio script/dialogue between two co-hosts: Host A (the expert) and Host B (the curious co-host), discussing the material. Return an array of strings, where each string is strictly formatted exactly as either 'Host A: <dialogue_text>' or 'Host B: <dialogue_text>'."
     else:
         prompt += "Return an array of strings summarizing the most important aspects."
 

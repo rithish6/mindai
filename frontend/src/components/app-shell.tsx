@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload } from "lucide-react";
+import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload, Podcast } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { label: "AI Tutor", href: "/tutor", icon: Brain },
   { label: "Notes", href: "/notes", icon: FileText },
   { label: "Flashcards", href: "/flashcards", icon: Layers3 },
+  { label: "Podcast Studio", href: "/podcast", icon: Podcast },
   { label: "Mind Maps", href: "/mindmap", icon: Sparkles },
   { label: "Quizzes", href: "/quizzes", icon: GraduationCap },
   { label: "Doubt Solver", href: "/doubt", icon: Sparkles },
