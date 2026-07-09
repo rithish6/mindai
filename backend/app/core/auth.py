@@ -47,7 +47,8 @@ def get_current_user(
             new_user = User(id=uid, email=email)
             db.add(new_user)
             db.commit()
-            
+        
+        decoded_token["uid"] = uid
         return decoded_token
     except Exception as e:
         import traceback
