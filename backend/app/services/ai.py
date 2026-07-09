@@ -25,7 +25,9 @@ def get_ai_client():
         raise ValueError("Gemini API Key is not configured. Please set the GEMINI_API_KEY environment variable in your backend settings.")
     return client
 
-def generate_study_content(title: str, content: str | None, resource_type: str, language: str = "English") -> list[str]:
+from typing import Optional
+
+def generate_study_content(title: str, content: Optional[str], resource_type: str, language: str = "English") -> list[str]:
     """
     Generates educational content for a given title, content, and resource type.
     """
@@ -68,7 +70,7 @@ def generate_study_content(title: str, content: str | None, resource_type: str, 
         logger.error(f"Error generating content: {e}")
         return ["Failed to generate content. Please try again later.", str(e)]
 
-def ask_ai_tutor(question: str, materials: list[tuple[str, str | None]]) -> tuple[str, list[str]]:
+def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> tuple[str, list[str]]:
     """
     Answers a question based on the provided materials [(title, content)].
     Returns a tuple of (answer, sources).

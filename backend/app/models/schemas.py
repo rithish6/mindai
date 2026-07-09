@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -27,7 +28,7 @@ class TutorAnswer(BaseModel):
 
 
 class StudyTask(BaseModel):
-    id: str | None = None
+    id: Optional[str] = None
     title: str
     due_date: str
     topic: str
