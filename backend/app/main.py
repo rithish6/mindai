@@ -43,6 +43,14 @@ def health_check() -> dict[str, str]:
 def read_root():
     return {"status": "online", "message": "EduMind API is running! Please use the frontend application."}
 
+@app.get("/debug-commit")
+def debug_commit():
+    import os
+    return {
+        "commit": os.environ.get("RENDER_GIT_COMMIT", "local"),
+        "python_version": os.sys.version
+    }
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
