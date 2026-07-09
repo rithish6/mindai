@@ -7,7 +7,7 @@ psycopg2-binary
 redis==5.0.7
 langchain==0.2.7
 sentence-transformers==3.0.1
-faiss-cpu==1.8.0.post1
+faiss-cpu
 openai==1.35.10
 firebase-admin==6.5.0
 pymupdf
