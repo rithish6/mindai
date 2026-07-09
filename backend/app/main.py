@@ -42,3 +42,18 @@ def health_check() -> dict[str, str]:
 @app.get("/")
 def read_root():
     return {"status": "online", "message": "EduMind API is running! Please use the frontend application."}
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_msg = str(exc)
+    trace = traceback.format_exc()
+    print(f"Global Error: {error_msg}")
+    print(trace)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": error_msg, "traceback": trace}
+    )

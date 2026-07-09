@@ -5,10 +5,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize the client. The google-genai client automatically falls back to GEMINI_API_KEY environment variable.
-# We also pass it explicitly from settings if available.
-api_key = settings.openai_api_key  # User might have stored it here originally
-client = genai.Client(api_key=api_key)
+import os
+
+# Initialize the client with fallbacks. Catch initialization errors to prevent server startup crashes.
+api_key = settings.openai_api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
+client = None
+
+try:
+    if api_key:
+        client = genai.Client(api_key=api_key)
+    else:
+        # Fallback to default environment lookup
+        client = genai.Client()
+except Exception as e:
+    logger.warning(f"GenAI Client initialization deferred: {e}. Set GEMINI_API_KEY to enable AI features.")
+
+def get_ai_client():
+    if client is None:
+        raise ValueError("Gemini API Key is not configured. Please set the GEMINI_API_KEY environment variable in your backend settings.")
+    return client
 
 def generate_study_content(title: str, content: str | None, resource_type: str, language: str = "English") -> list[str]:
     """
@@ -32,7 +47,7 @@ def generate_study_content(title: str, content: str | None, resource_type: str, 
 
     # Using Structured Outputs (JSON Schema) to guarantee an array of strings
     try:
-        response = client.models.generate_content(
+        response = get_ai_client().models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
             config=genai.types.GenerateContentConfig(
@@ -67,7 +82,7 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, str | None]]) -> tupl
     )
     
     try:
-        response = client.models.generate_content(
+        response = get_ai_client().models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
         )
@@ -84,7 +99,7 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
     prompt = f"You are an expert tutor. Please analyze this image and help me solve my doubt. {question}"
     
     try:
-        response = client.models.generate_content(
+        response = get_ai_client().models.generate_content(
             model='gemini-2.5-flash',
             contents=[
                 prompt,
@@ -106,7 +121,7 @@ def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
     prompt = "Please provide a highly detailed transcription of this audio/video lecture. If it is long, also provide a short summary of the key points."
     
     try:
-        response = client.models.generate_content(
+        response = get_ai_client().models.generate_content(
             model='gemini-2.5-flash',
             contents=[
                 prompt,

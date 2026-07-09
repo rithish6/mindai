@@ -38,8 +38,9 @@ export default function MaterialsPage() {
       const uploaded = await uploadMaterial(file);
       setMaterials((current) => [uploaded, ...current]);
       setStatus("Upload queued for processing");
-    } catch {
-      setStatus("Upload failed. Check that the backend is running.");
+    } catch (err: any) {
+      console.error(err);
+      setStatus(err.message || "Upload failed. Check that the backend is running.");
     } finally {
       setIsUploading(false);
       event.target.value = "";

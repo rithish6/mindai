@@ -46,7 +46,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let errorMsg = `Request failed: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.detail || errorData.error || errorMsg;
+    } catch (e) {
+      // Ignore JSON parse error if response is not JSON
+    }
+    throw new Error(errorMsg);
   }
 
   return response.json() as Promise<T>;
