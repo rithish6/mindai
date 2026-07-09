@@ -13,7 +13,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://edumind-2427a.web.app"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://edumind-2427a.web.app", "https://edumind-2427a.firebaseapp.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,3 +38,7 @@ app.include_router(doubt.router, prefix="/doubt", tags=["doubt"], dependencies=[
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok", "service": "edumind-ai-api"}
+
+@app.get("/")
+def read_root():
+    return {"status": "online", "message": "EduMind API is running! Please use the frontend application."}

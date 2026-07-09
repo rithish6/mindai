@@ -19,6 +19,21 @@ def list_materials(db: Session = Depends(get_db), current_user: dict = Depends(g
     return materials
 
 
+@router.post("/test-upload")
+async def test_upload(file: UploadFile):
+    return {"filename": file.filename}
+
+@router.get("/debug-token")
+def debug_token(auth_header: str = None):
+    try:
+        from firebase_admin import auth as firebase_auth
+        token = auth_header.replace("Bearer ", "") if auth_header else "dummy"
+        decoded = firebase_auth.verify_id_token(token)
+        return {"status": "success", "decoded": decoded}
+    except Exception as e:
+        import traceback
+        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+
 @router.post("/upload", response_model=MaterialSchema)
 async def upload_material(file: UploadFile, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")
