@@ -45,8 +45,8 @@ export default function MindMapPage() {
       } else {
         setStatus("Failed to generate mind map.");
       }
-    } catch {
-      setStatus("Generation failed. Check that the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {
       setIsGenerating(false);
     }

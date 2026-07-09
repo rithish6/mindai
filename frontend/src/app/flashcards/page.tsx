@@ -50,8 +50,8 @@ export default function FlashcardsPage() {
       });
       setCards(parsedCards);
       setStatus(`Generated ${parsedCards.length} flashcards.`);
-    } catch {
-      setStatus("Generation failed. Check that the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {
       setIsGenerating(false);
     }

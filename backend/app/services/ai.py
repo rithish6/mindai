@@ -68,7 +68,20 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
         return [str(parsed)]
     except Exception as e:
         logger.error(f"Error generating content: {e}")
-        return ["Failed to generate content. Please try again later.", str(e)]
+        handle_ai_error(e)
+
+def handle_ai_error(e: Exception):
+    error_msg = str(e)
+    from fastapi import HTTPException
+    if "RESOURCE_EXHAUSTED" in error_msg or "429" in error_msg or "quota" in error_msg.lower():
+        raise HTTPException(
+            status_code=429,
+            detail="Gemini API daily quota exceeded (20 requests/day for Free tier). Please set or update your own GEMINI_API_KEY environment variable in your backend settings."
+        )
+    raise HTTPException(
+        status_code=500,
+        detail=f"AI operation failed: {error_msg}"
+    )
 
 def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> tuple[str, list[str]]:
     """
@@ -92,7 +105,7 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> t
         return (response.text, material_titles)
     except Exception as e:
         logger.error(f"Error asking tutor: {e}")
-        return ("Sorry, I couldn't process your question at the moment.", [])
+        handle_ai_error(e)
 
 def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
     """
@@ -115,7 +128,7 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
         return response.text
     except Exception as e:
         logger.error(f"Error solving image doubt: {e}")
-        return "Sorry, I could not process this image right now. Please try again later."
+        handle_ai_error(e)
 
 def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
     """
@@ -137,4 +150,4 @@ def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
         return response.text
     except Exception as e:
         logger.error(f"Error transcribing media: {e}")
-        return ""
+        handle_ai_error(e)

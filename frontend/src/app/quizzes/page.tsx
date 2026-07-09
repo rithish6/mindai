@@ -62,8 +62,8 @@ export default function QuizzesPage() {
       
       setQuestions(parsedQuestions);
       setStatus(`Generated ${parsedQuestions.length} questions.`);
-    } catch {
-      setStatus("Generation failed. Check that the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {
       setIsGenerating(false);
     }

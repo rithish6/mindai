@@ -117,8 +117,8 @@ export default function PodcastStudioPage() {
 
       setScript(correctedLines);
       setStatus(`Generated dialogue with ${correctedLines.length} lines.`);
-    } catch {
-      setStatus("Generation failed. Check that the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {
       setIsGenerating(false);
     }

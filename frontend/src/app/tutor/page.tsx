@@ -39,10 +39,10 @@ export default function TutorPage() {
     try {
       const response = await askTutor(trimmed, selectedMaterialIds);
       setMessages((current) => [...current, { role: "EduMind AI", text: response.answer, sources: response.sources }]);
-    } catch {
+    } catch (err: any) {
       setMessages((current) => [
         ...current,
-        { role: "EduMind AI", text: "I could not reach the backend. Check your connection or API keys." }
+        { role: "EduMind AI", text: err?.message || "I could not reach the backend. Check your connection or API keys." }
       ]);
     } finally {
       setIsSending(false);

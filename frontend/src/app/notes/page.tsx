@@ -54,8 +54,8 @@ export default function NotesPage() {
       const response = await generateResource(selectedMaterialId, "notes", selectedLanguage);
       setSections(response.content);
       setStatus(`Notes generated in ${selectedLanguage}!`);
-    } catch {
-      setStatus("Generation failed. Check that the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {
       setIsGenerating(false);
     }

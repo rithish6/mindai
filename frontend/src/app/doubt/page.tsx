@@ -43,8 +43,8 @@ export default function DoubtSolverPage() {
       const response = await askImageDoubt(file, question);
       setAnswer(response.answer);
       setStatus("Solved!");
-    } catch {
-      setStatus("Failed to solve doubt. Make sure the backend is running.");
+    } catch (err: any) {
+      setStatus(err?.message || "Failed to solve doubt. Make sure the backend is running.");
     } finally {
       setIsSolving(false);
     }
