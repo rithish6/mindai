@@ -56,6 +56,12 @@ async def upload_material(file: UploadFile, db: Session = Depends(get_db), curre
             extracted_text = transcribe_media(file_bytes, file.content_type)
         except Exception as e:
             print(f"Failed to transcribe media: {e}")
+    elif file.content_type and (file.content_type.startswith("text/") or file.content_type == "application/json" or file.filename.endswith((".txt", ".md", ".json", ".csv"))):
+        try:
+            file_bytes = await file.read()
+            extracted_text = file_bytes.decode("utf-8", errors="ignore")
+        except Exception as e:
+            print(f"Failed to read text file: {e}")
     
     new_material = Material(
         id=str(uuid.uuid4()),

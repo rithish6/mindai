@@ -30,20 +30,19 @@ def generate_study_content(title: str, content: str | None, resource_type: str, 
     Generates educational content for a given title, content, and resource type.
     """
     context = content if content else f"the topic '{title}'"
-    prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, create a list of {resource_type}. "
     
     if resource_type == "notes":
-        prompt += "Provide key concepts, definitions, and brief explanations. Return an array of strings, where each string is a bullet point."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, create structured study notes. Provide key concepts, definitions, and brief explanations. Return an array of strings, where each string is a separate bullet point or paragraph of the notes."
     elif resource_type == "flashcards":
-        prompt += "Provide flashcards in a Q&A format. Return an array of strings, where each string is formatted as 'Q: <question> | A: <answer>'."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a set of flashcards. Return an array of strings, where each string is strictly formatted as 'Q: <question> | A: <answer>'."
     elif resource_type == "quiz":
-        prompt += "Provide a multiple-choice quiz. Return an array of strings, where each string is strictly formatted exactly as 'Q: <question> | O: <option1>, <option2>, <option3>, <option4> | A: <exact_text_of_correct_option>'."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a multiple-choice practice quiz. Return an array of strings, where each string is strictly formatted exactly as 'Q: <question> | O: <option1>, <option2>, <option3>, <option4> | A: <exact_text_of_correct_option>'."
     elif resource_type == "mindmap":
-        prompt += "Create a mind map representing the key concepts and their relationships. Return an array containing exactly one string: the raw mermaid.js graph syntax (e.g. 'graph TD\\n A-->B'). Do NOT wrap it in markdown code blocks."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, create a mind map representing the key concepts and their relationships. Return an array containing exactly one string: the raw mermaid.js graph syntax (e.g. 'graph TD\\n A-->B'). Do NOT wrap it in markdown code blocks."
     elif resource_type == "podcast":
-        prompt += "Create an engaging, natural-sounding audio script/dialogue between two co-hosts: Host A (the expert) and Host B (the curious co-host), discussing the material. Return an array of strings, where each string is strictly formatted exactly as either 'Host A: <dialogue_text>' or 'Host B: <dialogue_text>'."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate an engaging, natural-sounding audio script/dialogue between two co-hosts discussing this material: Host A (the expert) and Host B (the curious student/co-host). Make sure the co-hosts explain and summarize the material thoroughly. Return an array of strings, where each string is strictly formatted exactly as either 'Host A: <dialogue_text>' or 'Host B: <dialogue_text>'."
     else:
-        prompt += "Return an array of strings summarizing the most important aspects."
+        prompt = f"You are an expert tutor. I am studying '{title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a summary of the most important aspects. Return an array of strings summarizing the material."
 
     prompt += f"\n\nImportant: You must generate the final output entirely in the {language} language."
 
