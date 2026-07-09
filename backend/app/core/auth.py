@@ -11,10 +11,8 @@ try:
     # For token verification, just having the project ID is often sufficient.
     firebase_admin.get_app()
 except ValueError:
-    cred = credentials.ApplicationDefault()
-    # Replace with your actual project ID if not set in environment
-    project_id = os.environ.get('FIREBASE_PROJECT_ID', 'edumind-auth-dev-9182')
-    firebase_admin.initialize_app(cred, {'projectId': project_id})
+    project_id = os.environ.get('FIREBASE_PROJECT_ID', 'edumind-2427a')
+    firebase_admin.initialize_app(options={'projectId': project_id})
 
 security = HTTPBearer()
 
