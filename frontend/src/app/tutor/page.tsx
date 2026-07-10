@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { askTutor, getMaterials, Material } from "@/lib/api";
 
 type Message = {
-  role: "Student" | "Edumind";
+  role: "Student" | "SnapLearn with EduMind";
   text: string;
   sources?: string[];
 };
@@ -38,11 +38,11 @@ export default function TutorPage() {
 
     try {
       const response = await askTutor(trimmed, selectedMaterialIds);
-      setMessages((current) => [...current, { role: "Edumind", text: response.answer, sources: response.sources }]);
+      setMessages((current) => [...current, { role: "SnapLearn with EduMind", text: response.answer, sources: response.sources }]);
     } catch (err: any) {
       setMessages((current) => [
         ...current,
-        { role: "Edumind", text: err?.message || "I could not reach the backend. Check your connection or API keys." }
+        { role: "SnapLearn with EduMind", text: err?.message || "I could not reach the backend. Check your connection or API keys." }
       ]);
     } finally {
       setIsSending(false);

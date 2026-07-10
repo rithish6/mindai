@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Edumind",
+  title: "SnapLearn with EduMind",
   description: "AI-powered learning management platform"
 };
 

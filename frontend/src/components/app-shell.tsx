@@ -43,7 +43,8 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
               <Sparkles size={18} aria-hidden="true" />
             </div>
             <div>
-              <p className="text-[17px] font-bold tracking-wide text-white">Snaplearn AI</p>
+              <p className="text-[15px] font-extrabold tracking-wide text-white leading-tight">SnapLearn</p>
+              <p className="text-[9px] font-bold text-primary uppercase tracking-widest leading-none mt-0.5">with EduMind</p>
             </div>
           </Link>
 

@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Edumind"
+    app_name: str = "SnapLearn with EduMind"
     environment: str = "development"
     database_url: str = "postgresql://postgres:postgres@localhost:5432/edumind"
     redis_url: str = "redis://localhost:6379/0"
