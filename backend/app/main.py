@@ -46,9 +46,11 @@ def read_root():
 @app.get("/debug-commit")
 def debug_commit():
     import os
+    from app.services.ai import get_ai_provider
     return {
         "commit": os.environ.get("RENDER_GIT_COMMIT", "local"),
-        "python_version": os.sys.version
+        "python_version": os.sys.version,
+        "ai_provider": get_ai_provider()
     }
 
 from fastapi import Request
