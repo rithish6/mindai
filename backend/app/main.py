@@ -37,7 +37,7 @@ app.include_router(doubt.router, prefix="/doubt", tags=["doubt"], dependencies=[
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "service": "edumind-ai-api"}
+    return {"status": "ok", "service": "edumind-api"}
 
 @app.get("/")
 def read_root():

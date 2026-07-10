@@ -36,7 +36,7 @@ export default function Home() {
               Turn uploaded material into notes, quizzes, flashcards, and tutor-ready context.
             </h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-textMuted">
-              Welcome to the fully connected Edumind AI platform. Upload a PDF or Video lecture to instantly generate AI study material.
+              Welcome to the fully connected Edumind platform. Upload a PDF or Video lecture to instantly generate AI study material.
             </p>
           </div>
           <div className="relative z-10 mt-8 flex flex-wrap gap-4">
