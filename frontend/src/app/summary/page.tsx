@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Loader2, BookOpen, Download, HelpCircle, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
-import { generateResource, getMaterials, Material } from "@/lib/api";
+import { generateResource, getMaterials, Material, API_BASE_URL } from "@/lib/api";
+import { auth } from "@/lib/firebase";
 
 const LANGUAGES = [
   "English",
@@ -44,13 +45,66 @@ export default function SummaryPage() {
     setMarkdownContent("");
 
     try {
-      const response = await generateResource(selectedMaterialId, "summary", selectedLanguage);
-      if (response && response.content && response.content.length > 0) {
-        setMarkdownContent(response.content[0]);
-        setStatus(`Summary generated successfully in ${selectedLanguage}!`);
-      } else {
-        setStatus("Failed to generate summary content.");
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
+
+      const res = await fetch(`${API_BASE_URL}/generate/stream`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          material_id: selectedMaterialId,
+          resource_type: "summary",
+          language: selectedLanguage
+        })
+      });
+
+      if (!res.ok) {
+        let errorMsg = `Generation failed: ${res.status}`;
+        try {
+          const errData = await res.json();
+          errorMsg = errData.detail || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("Connection failed: No response stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "text") {
+              setMarkdownContent((current) => current + parsed.content);
+            } else if (parsed.type === "error") {
+              throw new Error(parsed.content);
+            }
+          } catch (e: any) {
+            if (e.message.startsWith("AI operation failed")) {
+              throw e;
+            }
+            console.error("Stream parse error:", e);
+          }
+        }
+      }
+
+      setStatus(`Summary generated successfully in ${selectedLanguage}!`);
     } catch (err: any) {
       setStatus(err?.message || "Generation failed. Check that the backend is running.");
     } finally {

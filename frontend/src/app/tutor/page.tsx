@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2, SendHorizontal, BrainCircuit } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
-import { askTutor, getMaterials, Material } from "@/lib/api";
+import { getMaterials, Material, API_BASE_URL } from "@/lib/api";
+import { auth } from "@/lib/firebase";
 
 type Message = {
   role: "Student" | "SnapLearn with EduMind";
@@ -18,6 +20,8 @@ export default function TutorPage() {
   const [question, setQuestion] = useState("");
   const [isSending, setIsSending] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     getMaterials().then(mats => {
       setMaterials(mats);
@@ -26,6 +30,11 @@ export default function TutorPage() {
       }
     }).catch(err => console.error("Failed to fetch materials", err));
   }, []);
+
+  // Scroll to bottom helper
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,8 +46,79 @@ export default function TutorPage() {
     setIsSending(true);
 
     try {
-      const response = await askTutor(trimmed, selectedMaterialIds);
-      setMessages((current) => [...current, { role: "SnapLearn with EduMind", text: response.answer, sources: response.sources }]);
+      const token = await auth.currentUser?.getIdToken().catch(() => null);
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/tutor/ask-stream`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ question: trimmed, material_ids: selectedMaterialIds })
+      });
+
+      if (!res.ok) {
+        let errorMsg = `Tutor failed: ${res.status}`;
+        try {
+          const errData = await res.json();
+          errorMsg = errData.detail || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("Connection failed: No response stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      
+      // Append an empty assistant response first
+      setMessages((current) => [
+        ...current,
+        { role: "SnapLearn with EduMind", text: "", sources: [] }
+      ]);
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Save partial line to buffer
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = json_parsed(line);
+            if (parsed.type === "sources") {
+              setMessages((current) => {
+                const copy = [...current];
+                const last = copy[copy.length - 1];
+                if (last && last.role === "SnapLearn with EduMind") {
+                  last.sources = parsed.content;
+                }
+                return copy;
+              });
+            } else if (parsed.type === "text") {
+              setMessages((current) => {
+                const copy = [...current];
+                const last = copy[copy.length - 1];
+                if (last && last.role === "SnapLearn with EduMind") {
+                  last.text += parsed.content;
+                }
+                return copy;
+              });
+            } else if (parsed.type === "error") {
+              throw new Error(parsed.content);
+            }
+          } catch (e) {
+            console.error("Failed to parse chunk", e);
+          }
+        }
+      }
     } catch (err: any) {
       setMessages((current) => [
         ...current,
@@ -46,6 +126,15 @@ export default function TutorPage() {
       ]);
     } finally {
       setIsSending(false);
+    }
+  }
+
+  // Safe JSON parser helper to prevent crashes
+  function json_parsed(text: string) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {};
     }
   }
 
@@ -82,15 +171,34 @@ export default function TutorPage() {
                     ? "bg-primary text-white shadow-glow rounded-tr-sm" 
                     : "bg-surface border border-border text-textMuted rounded-tl-sm"
                 }`}>
-                  <p className="whitespace-pre-wrap">{message.text}</p>
+                  {message.role === "Student" ? (
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                  ) : (
+                    <div className="prose prose-invert max-w-none text-textMuted select-text">
+                      <ReactMarkdown
+                        components={{
+                          h2: ({ ...props }) => <h2 className="text-base font-bold text-white mt-4 mb-2 border-b border-white/5 pb-1" {...props} />,
+                          h3: ({ ...props }) => <h3 className="text-sm font-semibold text-white/90 mt-3 mb-1" {...props} />,
+                          p: ({ ...props }) => <p className="text-sm leading-relaxed mb-3" {...props} />,
+                          ul: ({ ...props }) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
+                          ol: ({ ...props }) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
+                          li: ({ ...props }) => <li className="text-[13px]" {...props} />,
+                          code: ({ ...props }) => <code className="bg-white/5 border border-white/10 rounded px-1.5 py-0.5 font-mono text-[12px] text-primary" {...props} />
+                        }}
+                      >
+                        {message.text}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                   {message.sources?.length ? (
                     <div className="mt-4 pt-3 border-t border-white/10">
-                      <p className="text-xs font-medium text-white/60">Sources: {message.sources.join(", ")}</p>
+                      <p className="text-[11px] font-medium text-white/60">Sources: {message.sources.join(", ")}</p>
                     </div>
                   ) : null}
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           
           <form className="mt-auto flex gap-3 relative z-10" onSubmit={handleSubmit}>

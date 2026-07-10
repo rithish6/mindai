@@ -286,3 +286,58 @@ def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
         except Exception as e:
             logger.error(f"Error transcribing media via Gemini: {e}")
             handle_ai_error(e)
+
+def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None):
+    key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+    if not key:
+        raise ValueError("OpenAI API Key is not configured. Please set the OPENAI_API_KEY environment variable.")
+    
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json"
+    }
+    
+    messages = []
+    if system_message:
+        messages.append({"role": "system", "content": system_message})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": messages,
+        "stream": True
+    }
+    
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, stream=True)
+    response.raise_for_status()
+    
+    for line in response.iter_lines():
+        if line:
+            decoded = line.decode('utf-8')
+            if decoded.startswith("data: "):
+                data_str = decoded[6:]
+                if data_str == "[DONE]":
+                    break
+                try:
+                    chunk_data = json.loads(data_str)
+                    delta = chunk_data["choices"][0]["delta"]
+                    if "content" in delta:
+                        yield delta["content"]
+                except Exception:
+                    pass
+
+def call_gemini_chat_stream(prompt: str):
+    response = get_ai_client().models.generate_content_stream(
+        model='gemini-2.5-flash',
+        contents=prompt,
+    )
+    for chunk in response:
+        if chunk.text:
+            yield chunk.text
+
+def stream_ai_response(prompt: str, system_message: Optional[str] = None):
+    provider = get_ai_provider()
+    if provider == "openai":
+        yield from call_openai_chat_stream(prompt, system_message)
+    else:
+        yield from call_gemini_chat_stream(prompt)
