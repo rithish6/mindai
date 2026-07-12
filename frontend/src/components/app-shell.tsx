@@ -101,7 +101,7 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
               <button className="grid h-10 w-10 place-items-center rounded-full bg-surface border border-border text-textMuted hover:text-white transition-colors" aria-label="Notifications">
                 <Bell size={18} />
               </button>
-              <div className="h-10 w-10 rounded-full bg-gradient-ai cursor-pointer shadow-glow border-2 border-surface" />
+              <Link href="/profile" className="h-10 w-10 rounded-full bg-gradient-ai cursor-pointer shadow-glow border-2 border-surface block" aria-label="View Profile" />
             </div>
           </header>
           <div className="flex-1 overflow-y-auto px-5 sm:px-8 lg:px-10 py-6">
