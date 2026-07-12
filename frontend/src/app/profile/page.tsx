@@ -196,6 +196,30 @@ export default function ProfilePage() {
                 </select>
               </div>
 
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-white">
+                <div className="flex items-center gap-2 font-bold text-primary mb-2">
+                  <Sparkles size={14} className="animate-pulse" />
+                  <span>Quick Guide: Free API Keys for Friends</span>
+                </div>
+                <p className="text-textMuted leading-relaxed mb-3">
+                  To keep SnapLearn fast and 100% free without hitting daily server rate-limits, you and your friends can get your own private Google Gemini key in 30 seconds:
+                </p>
+                <ol className="list-decimal pl-4 space-y-1.5 text-textMuted font-medium">
+                  <li>
+                    <a 
+                      href="https://aistudio.google.com/" 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-primary hover:underline font-bold"
+                    >
+                      Click here to open Google AI Studio ↗
+                    </a>
+                  </li>
+                  <li>Click the blue <span className="text-white font-semibold">&quot;Get API Key&quot;</span> button at the top-left, then select <span className="text-white font-semibold">&quot;Create API Key&quot;</span>.</li>
+                  <li>Copy the key code (starting with <code className="text-white font-bold bg-white/5 px-1 rounded">AIzaSy...</code>) and paste it below.</li>
+                </ol>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-textMuted uppercase tracking-wider mb-2">Custom Gemini API Key</label>
                 <div className="relative">
