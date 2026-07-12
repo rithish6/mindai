@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from app.db.database import get_db
@@ -14,9 +14,14 @@ router = APIRouter()
 
 @router.get("/summary")
 def analytics_summary(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     user_id = current_user.get("uid")
     
     # Query database count

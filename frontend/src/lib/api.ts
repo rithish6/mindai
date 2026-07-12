@@ -91,7 +91,7 @@ export function createStudyTask(task: StudyTask) {
 }
 
 export function getAnalyticsSummary() {
-  return request<AnalyticsSummary>("/analytics/summary");
+  return request<AnalyticsSummary>(`/analytics/summary?t=${Date.now()}`);
 }
 
 export function generateResource(materialId: string, resourceType: string, language: string = "English") {
