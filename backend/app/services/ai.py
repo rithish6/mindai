@@ -22,6 +22,40 @@ try:
 except Exception as e:
     logger.warning(f"GenAI Client initialization deferred: {e}. Set GEMINI_API_KEY to enable AI features.")
 
+def get_all_gemini_keys(custom_key: Optional[str] = None) -> list[str]:
+    if custom_key:
+        return [custom_key]
+    
+    # Read keys from GEMINI_API_KEYS (comma-separated list) or GEMINI_API_KEY
+    keys_str = os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY") or ""
+    if not keys_str and settings.openai_api_key and not settings.openai_api_key.startswith("sk-"):
+        keys_str = settings.openai_api_key
+        
+    keys = [k.strip() for k in keys_str.replace(";", ",").split(",") if k.strip()]
+    return keys
+
+def execute_with_gemini_fallback(func, *args, custom_key: Optional[str] = None, **kwargs):
+    keys = get_all_gemini_keys(custom_key)
+    if not keys:
+        if client:
+            return func(client, *args, **kwargs)
+        raise ValueError("No Gemini API keys are configured.")
+        
+    last_exception = None
+    for key in keys:
+        try:
+            temp_client = genai.Client(api_key=key)
+            return func(temp_client, *args, **kwargs)
+        except Exception as e:
+            err_msg = str(e)
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "quota" in err_msg.lower():
+                logger.warning(f"Gemini API key rate limited or quota exceeded. Trying fallback key... Error: {e}")
+                last_exception = e
+                continue
+            else:
+                raise e
+    raise last_exception
+
 def get_ai_client(custom_gemini_key: Optional[str] = None):
     if custom_gemini_key:
         try:
@@ -122,9 +156,9 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
             handle_ai_error(e)
             
     else:
-        # Gemini flow
-        try:
-            response = get_ai_client(custom_gemini_key).models.generate_content(
+        # Gemini flow with fallback rotation
+        def _generate(g_client):
+            response = g_client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
                 config=genai.types.GenerateContentConfig(
@@ -139,6 +173,9 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
             if isinstance(parsed, list):
                 return parsed
             return [str(parsed)]
+
+        try:
+            return execute_with_gemini_fallback(_generate, custom_key=custom_gemini_key)
         except Exception as e:
             logger.error(f"Error generating content via Gemini: {e}")
             handle_ai_error(e)
@@ -181,12 +218,16 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]], cust
             logger.error(f"Error asking OpenAI tutor: {e}")
             handle_ai_error(e)
     else:
-        try:
-            response = get_ai_client(custom_gemini_key).models.generate_content(
+        # Gemini flow with fallback rotation
+        def _ask(g_client):
+            response = g_client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
             )
             return (response.text, material_titles)
+
+        try:
+            return execute_with_gemini_fallback(_ask, custom_key=custom_gemini_key)
         except Exception as e:
             logger.error(f"Error asking Gemini tutor: {e}")
             handle_ai_error(e)
@@ -233,8 +274,9 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
             logger.error(f"Error solving image doubt via OpenAI: {e}")
             handle_ai_error(e)
     else:
-        try:
-            response = get_ai_client(custom_gemini_key).models.generate_content(
+        # Gemini flow with fallback rotation
+        def _solve(g_client):
+            response = g_client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=[
                     prompt,
@@ -245,6 +287,9 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
                 ]
             )
             return response.text
+
+        try:
+            return execute_with_gemini_fallback(_solve, custom_key=custom_gemini_key)
         except Exception as e:
             logger.error(f"Error solving image doubt via Gemini: {e}")
             handle_ai_error(e)
@@ -282,9 +327,10 @@ def transcribe_media(media_bytes: bytes, mime_type: str, custom_gemini_key: Opti
             logger.error(f"Error transcribing audio via OpenAI: {e}")
             handle_ai_error(e)
     else:
+        # Gemini flow with fallback rotation
         prompt = "Please provide a highly detailed transcription of this audio/video lecture. If it is long, also provide a short summary of the key points."
-        try:
-            response = get_ai_client(custom_gemini_key).models.generate_content(
+        def _transcribe(g_client):
+            response = g_client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=[
                     prompt,
@@ -295,6 +341,9 @@ def transcribe_media(media_bytes: bytes, mime_type: str, custom_gemini_key: Opti
                 ]
             )
             return response.text
+
+        try:
+            return execute_with_gemini_fallback(_transcribe, custom_key=custom_gemini_key)
         except Exception as e:
             logger.error(f"Error transcribing media via Gemini: {e}")
             handle_ai_error(e)
@@ -339,13 +388,50 @@ def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None, c
                     pass
 
 def call_gemini_chat_stream(prompt: str, custom_gemini_key: Optional[str] = None):
-    response = get_ai_client(custom_gemini_key).models.generate_content_stream(
-        model='gemini-2.5-flash',
-        contents=prompt,
-    )
-    for chunk in response:
-        if chunk.text:
-            yield chunk.text
+    keys = get_all_gemini_keys(custom_gemini_key)
+    if not keys:
+        if client:
+            response = client.models.generate_content_stream(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            for chunk in response:
+                if chunk.text:
+                    yield chunk.text
+            return
+        raise ValueError("No Gemini API keys are configured.")
+        
+    last_exception = None
+    for key in keys:
+        try:
+            temp_client = genai.Client(api_key=key)
+            response = temp_client.models.generate_content_stream(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
+            # Try to fetch the first chunk to ensure connection/quota succeeds
+            iterator = iter(response)
+            try:
+                first_chunk = next(iterator)
+                if first_chunk.text:
+                    yield first_chunk.text
+            except StopIteration:
+                return
+                
+            for chunk in iterator:
+                if chunk.text:
+                    yield chunk.text
+            return
+        except Exception as e:
+            err_msg = str(e)
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "quota" in err_msg.lower():
+                logger.warning(f"Gemini streaming key rate limited or quota exceeded. Trying fallback key... Error: {e}")
+                last_exception = e
+                continue
+            else:
+                raise e
+    if last_exception:
+        raise last_exception
 
 def stream_ai_response(prompt: str, system_message: Optional[str] = None, custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None):
     provider = get_ai_provider(custom_gemini_key, custom_openai_key)
