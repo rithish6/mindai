@@ -90,7 +90,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-2xl overflow-hidden glass-panel p-6 text-white shadow-surface flex flex-col sm:flex-row items-center gap-6"
+            className="relative rounded-2xl overflow-hidden glass-panel p-6 text-white shadow-surface flex flex-col sm:flex-row items-center gap-6 glow-card transition-all duration-300 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]"
           >
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
             
@@ -136,7 +136,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05 }}
-            className="rounded-2xl glass-panel p-6 shadow-surface"
+            className="rounded-2xl glass-panel p-6 shadow-surface glow-card hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300"
           >
             <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
               <User size={18} className="text-primary" />
@@ -188,7 +188,7 @@ export default function ProfilePage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full h-11 rounded-xl bg-primary hover:bg-primaryHover text-white text-sm font-bold transition-all shadow-glow flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-xl bg-primary hover:bg-primaryHover text-white text-sm font-bold transition-all shadow-glow flex items-center justify-center gap-2 btn-interactive"
                 >
                   <Save size={16} />
                   <span>Save Settings</span>
@@ -207,7 +207,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="rounded-2xl glass-panel p-6 shadow-surface"
+            className="rounded-2xl glass-panel p-6 shadow-surface glow-card hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300"
           >
             <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
               <Award size={18} className="text-secondary animate-pulse" />
@@ -265,7 +265,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
-            className="rounded-2xl glass-panel p-6 shadow-surface"
+            className="rounded-2xl glass-panel p-6 shadow-surface glow-card hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300"
           >
             <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
               <Sparkles size={18} className="text-warning" />
@@ -327,7 +327,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="rounded-2xl glass-panel p-6 shadow-surface"
+            className="rounded-2xl glass-panel p-6 shadow-surface glow-card hover:shadow-[0_0_25px_rgba(139,92,246,0.12)] transition-all duration-300"
           >
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
               <ShieldCheck size={18} className="text-success" />
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                   {!session.active && (
                     <button
                       onClick={() => handleRevokeSession(session.id)}
-                      className="px-2.5 py-1 rounded-md bg-white/5 hover:bg-error/10 hover:text-error hover:border-error/20 border border-white/10 text-textMuted font-bold text-[10px] uppercase transition-colors"
+                      className="px-2.5 py-1 rounded-md bg-white/5 hover:bg-error/10 hover:text-error hover:border-error/20 border border-white/10 text-textMuted font-bold text-[10px] uppercase transition-colors btn-interactive"
                     >
                       Revoke
                     </button>
