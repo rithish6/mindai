@@ -36,6 +36,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("Authorization", `Bearer ${token}`);
   }
   
+  if (typeof window !== "undefined") {
+    const geminiKey = localStorage.getItem("gemini_api_key");
+    const openaiKey = localStorage.getItem("openai_api_key");
+    if (geminiKey) {
+      headers.set("x-gemini-key", geminiKey);
+    }
+    if (openaiKey) {
+      headers.set("x-openai-key", openaiKey);
+    }
+  }
+
   if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }

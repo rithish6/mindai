@@ -1,7 +1,6 @@
-from __future__ import annotations
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.models.schemas import TutorAnswer, TutorQuestion
 from app.db.database import get_db
@@ -14,10 +13,18 @@ router = APIRouter()
 def ask_tutor(
     payload: TutorQuestion,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    x_gemini_key: Optional[str] = Header(None),
+    x_openai_key: Optional[str] = Header(None)
 ) -> TutorAnswer:
     user_id = current_user.get("uid")
-    return answer_with_context(payload, db, user_id)
+    return answer_with_context(
+        payload, 
+        db, 
+        user_id, 
+        custom_gemini_key=x_gemini_key, 
+        custom_openai_key=x_openai_key
+    )
 
 from fastapi.responses import StreamingResponse
 import json
@@ -27,7 +34,9 @@ from app.models.domain import Material
 def ask_tutor_stream(
     payload: TutorQuestion,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    x_gemini_key: Optional[str] = Header(None),
+    x_openai_key: Optional[str] = Header(None)
 ):
     user_id = current_user.get("uid")
     materials = db.query(Material).filter(
@@ -48,7 +57,11 @@ def ask_tutor_stream(
         yield json.dumps({"type": "sources", "content": material_titles}) + "\n"
         try:
             from app.services.ai import stream_ai_response
-            for text_chunk in stream_ai_response(prompt):
+            for text_chunk in stream_ai_response(
+                prompt,
+                custom_gemini_key=x_gemini_key,
+                custom_openai_key=x_openai_key
+            ):
                 yield json.dumps({"type": "text", "content": text_chunk}) + "\n"
         except Exception as e:
             yield json.dumps({"type": "error", "content": str(e)}) + "\n"

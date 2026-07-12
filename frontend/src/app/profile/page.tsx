@@ -47,6 +47,8 @@ export default function ProfilePage() {
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [weeklyReminders, setWeeklyReminders] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [openaiApiKey, setOpenaiApiKey] = useState("");
   
   // Interactive badge state
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -64,10 +66,19 @@ export default function ProfilePage() {
     } else {
       setDisplayName("Scholar");
     }
+    
+    if (typeof window !== "undefined") {
+      setGeminiApiKey(localStorage.getItem("gemini_api_key") || "");
+      setOpenaiApiKey(localStorage.getItem("openai_api_key") || "");
+    }
   }, [user]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gemini_api_key", geminiApiKey.trim());
+      localStorage.setItem("openai_api_key", openaiApiKey.trim());
+    }
     setShowSaveToast(true);
     setTimeout(() => {
       setShowSaveToast(false);
@@ -183,6 +194,34 @@ export default function ProfilePage() {
                   <option>Testing (Interactive Quizzes)</option>
                   <option>Traditional (Summarized PDFs & Notes)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-textMuted uppercase tracking-wider mb-2">Custom Gemini API Key</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={geminiApiKey}
+                    placeholder="AI quota full? Enter your custom Gemini key (starts with AIza...)"
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-textMuted/30"
+                  />
+                  <Lock size={16} className="absolute left-3.5 top-3.5 text-textMuted/50" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-textMuted uppercase tracking-wider mb-2">Custom OpenAI API Key</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={openaiApiKey}
+                    placeholder="Enter custom OpenAI key (starts with sk-...)"
+                    onChange={(e) => setOpenaiApiKey(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-background text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-textMuted/30"
+                  />
+                  <Lock size={16} className="absolute left-3.5 top-3.5 text-textMuted/50" />
+                </div>
               </div>
 
               <div className="pt-2">

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
 from app.models.schemas import GeneratedResourceRequest
@@ -17,7 +17,9 @@ router = APIRouter()
 def generate_resource(
     payload: GeneratedResourceRequest, 
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    x_gemini_key: Optional[str] = Header(None),
+    x_openai_key: Optional[str] = Header(None)
 ) -> dict[str, Any]:
     
     user_id = current_user.get("uid")
@@ -36,7 +38,9 @@ def generate_resource(
         title=material.title, 
         content=material.content,
         resource_type=payload.resource_type,
-        language=payload.language
+        language=payload.language,
+        custom_gemini_key=x_gemini_key,
+        custom_openai_key=x_openai_key
     )
 
     return {
@@ -53,7 +57,9 @@ import json
 def generate_resource_stream(
     payload: GeneratedResourceRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    x_gemini_key: Optional[str] = Header(None),
+    x_openai_key: Optional[str] = Header(None)
 ):
     user_id = current_user.get("uid")
     material = db.query(Material).filter(
@@ -77,7 +83,12 @@ def generate_resource_stream(
         try:
             from app.services.ai import stream_ai_response
             system_msg = "You are a helpful study tutor. Output the summary directly in Markdown."
-            for text_chunk in stream_ai_response(prompt, system_msg):
+            for text_chunk in stream_ai_response(
+                prompt, 
+                system_message=system_msg, 
+                custom_gemini_key=x_gemini_key, 
+                custom_openai_key=x_openai_key
+            ):
                 yield json.dumps({"type": "text", "content": text_chunk}) + "\n"
         except Exception as e:
             yield json.dumps({"type": "error", "content": str(e)}) + "\n"

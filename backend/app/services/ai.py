@@ -22,12 +22,24 @@ try:
 except Exception as e:
     logger.warning(f"GenAI Client initialization deferred: {e}. Set GEMINI_API_KEY to enable AI features.")
 
-def get_ai_client():
+def get_ai_client(custom_gemini_key: Optional[str] = None):
+    if custom_gemini_key:
+        try:
+            return genai.Client(api_key=custom_gemini_key)
+        except Exception as e:
+            logger.error(f"Failed to initialize custom GenAI Client: {e}")
+            raise ValueError(f"Invalid custom Gemini API Key: {e}")
+            
     if client is None:
         raise ValueError("Gemini API Key is not configured. Please set the GEMINI_API_KEY environment variable in your backend settings.")
     return client
 
-def get_ai_provider() -> str:
+def get_ai_provider(custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> str:
+    if custom_openai_key:
+        return "openai"
+    if custom_gemini_key:
+        return "gemini"
+        
     key = settings.openai_api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
     if key and key.startswith("sk-"):
         return "openai"
@@ -50,7 +62,7 @@ def handle_ai_error(e: Exception):
         detail=f"AI operation failed: {error_msg}"
     )
 
-def generate_study_content(title: str, content: Optional[str], resource_type: str, language: str = "English") -> list[str]:
+def generate_study_content(title: str, content: Optional[str], resource_type: str, language: str = "English", custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> list[str]:
     """
     Generates educational content for a given title, content, and resource type.
     """
@@ -73,11 +85,11 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
 
     prompt += f"\n\nImportant: You must generate the final output entirely in the {language} language."
 
-    provider = get_ai_provider()
+    provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     
     if provider == "openai":
         try:
-            key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+            key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
             headers = {
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
@@ -112,7 +124,7 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
     else:
         # Gemini flow
         try:
-            response = get_ai_client().models.generate_content(
+            response = get_ai_client(custom_gemini_key).models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
                 config=genai.types.GenerateContentConfig(
@@ -131,7 +143,7 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
             logger.error(f"Error generating content via Gemini: {e}")
             handle_ai_error(e)
 
-def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> tuple[str, list[str]]:
+def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]], custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> tuple[str, list[str]]:
     """
     Answers a question based on the provided materials [(title, content)].
     Returns a tuple of (answer, sources).
@@ -145,11 +157,11 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> t
         "Provide a clear, educational answer based on the materials provided."
     )
     
-    provider = get_ai_provider()
+    provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     
     if provider == "openai":
         try:
-            key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+            key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
             headers = {
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
@@ -170,7 +182,7 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> t
             handle_ai_error(e)
     else:
         try:
-            response = get_ai_client().models.generate_content(
+            response = get_ai_client(custom_gemini_key).models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
             )
@@ -179,18 +191,18 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]]) -> t
             logger.error(f"Error asking Gemini tutor: {e}")
             handle_ai_error(e)
 
-def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
+def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> str:
     """
     Solves a doubt based on an uploaded image and an optional question.
     Uses multimodal capabilities of OpenAI or Gemini.
     """
     prompt = f"You are an expert tutor. Please analyze this image and help me solve my doubt. {question}"
     
-    provider = get_ai_provider()
+    provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     
     if provider == "openai":
         try:
-            key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+            key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
             base64_image = base64.b64encode(image_bytes).decode('utf-8')
             headers = {
                 "Authorization": f"Bearer {key}",
@@ -222,7 +234,7 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
             handle_ai_error(e)
     else:
         try:
-            response = get_ai_client().models.generate_content(
+            response = get_ai_client(custom_gemini_key).models.generate_content(
                 model='gemini-2.5-flash',
                 contents=[
                     prompt,
@@ -237,15 +249,15 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str) -> str:
             logger.error(f"Error solving image doubt via Gemini: {e}")
             handle_ai_error(e)
 
-def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
+def transcribe_media(media_bytes: bytes, mime_type: str, custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> str:
     """
     Transcribes audio or video media using OpenAI Whisper or Gemini.
     """
-    provider = get_ai_provider()
+    provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     
     if provider == "openai":
         try:
-            key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+            key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
             headers = {
                 "Authorization": f"Bearer {key}"
             }
@@ -272,7 +284,7 @@ def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
     else:
         prompt = "Please provide a highly detailed transcription of this audio/video lecture. If it is long, also provide a short summary of the key points."
         try:
-            response = get_ai_client().models.generate_content(
+            response = get_ai_client(custom_gemini_key).models.generate_content(
                 model='gemini-2.5-flash',
                 contents=[
                     prompt,
@@ -287,8 +299,8 @@ def transcribe_media(media_bytes: bytes, mime_type: str) -> str:
             logger.error(f"Error transcribing media via Gemini: {e}")
             handle_ai_error(e)
 
-def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None):
-    key = os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
+def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None, custom_openai_key: Optional[str] = None):
+    key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
     if not key:
         raise ValueError("OpenAI API Key is not configured. Please set the OPENAI_API_KEY environment variable.")
     
@@ -326,8 +338,8 @@ def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None):
                 except Exception:
                     pass
 
-def call_gemini_chat_stream(prompt: str):
-    response = get_ai_client().models.generate_content_stream(
+def call_gemini_chat_stream(prompt: str, custom_gemini_key: Optional[str] = None):
+    response = get_ai_client(custom_gemini_key).models.generate_content_stream(
         model='gemini-2.5-flash',
         contents=prompt,
     )
@@ -335,9 +347,9 @@ def call_gemini_chat_stream(prompt: str):
         if chunk.text:
             yield chunk.text
 
-def stream_ai_response(prompt: str, system_message: Optional[str] = None):
-    provider = get_ai_provider()
+def stream_ai_response(prompt: str, system_message: Optional[str] = None, custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None):
+    provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     if provider == "openai":
-        yield from call_openai_chat_stream(prompt, system_message)
+        yield from call_openai_chat_stream(prompt, system_message, custom_openai_key)
     else:
-        yield from call_gemini_chat_stream(prompt)
+        yield from call_gemini_chat_stream(prompt, custom_gemini_key)

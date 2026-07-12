@@ -7,7 +7,15 @@ from app.models.domain import Material
 from app.services.ai import ask_ai_tutor
 
 
-def answer_with_context(payload: TutorQuestion, db: Session, user_id: str) -> TutorAnswer:
+from typing import Optional
+
+def answer_with_context(
+    payload: TutorQuestion, 
+    db: Session, 
+    user_id: str,
+    custom_gemini_key: Optional[str] = None,
+    custom_openai_key: Optional[str] = None
+) -> TutorAnswer:
     # Fetch the materials associated with the IDs in the payload, ensuring they belong to the user
     materials = db.query(Material).filter(
         Material.id.in_(payload.material_ids),
@@ -18,7 +26,12 @@ def answer_with_context(payload: TutorQuestion, db: Session, user_id: str) -> Tu
     material_data = [(mat.title, mat.content) for mat in materials]
     
     # Delegate to the AI service
-    answer_text, sources = ask_ai_tutor(payload.question, material_data)
+    answer_text, sources = ask_ai_tutor(
+        payload.question, 
+        material_data,
+        custom_gemini_key=custom_gemini_key,
+        custom_openai_key=custom_openai_key
+    )
     
     return TutorAnswer(
         answer=answer_text,
