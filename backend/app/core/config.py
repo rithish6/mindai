@@ -6,9 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "SnapLearn with EduMind"
+    app_name: str = "EduMind"
     environment: str = "development"
-    database_url: str = "postgresql://postgres:postgres@localhost:5432/edumind"
+    database_url: str = "sqlite:///./edumind.db"
     redis_url: str = "redis://localhost:6379/0"
     openai_api_key: Optional[str] = None
     storage_bucket: Optional[str] = None
