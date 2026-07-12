@@ -13,7 +13,16 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://edumind-2427a.web.app", "https://edumind-2427a.firebaseapp.com"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3002",
+        "https://edumind-2427a.web.app",
+        "https://edumind-2427a.firebaseapp.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,7 +46,7 @@ app.include_router(doubt.router, prefix="/doubt", tags=["doubt"], dependencies=[
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "service": "edumind-api"}
+    return {"status": "ok", "service": "edumind-ai-api"}
 
 @app.get("/")
 def read_root():
