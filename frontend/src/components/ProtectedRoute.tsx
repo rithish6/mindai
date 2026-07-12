@@ -17,6 +17,17 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
   }, [user, loading, pathname, router]);
 
+  useEffect(() => {
+    if (!loading) {
+      const handle = setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 50);
+      return () => clearTimeout(handle);
+    }
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0F] relative overflow-hidden">

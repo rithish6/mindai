@@ -32,7 +32,12 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
   const { signOut } = useAuth();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const handle = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 50);
+    return () => clearTimeout(handle);
   }, []);
 
   return (
