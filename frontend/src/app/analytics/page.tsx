@@ -35,29 +35,11 @@ import { motion } from "framer-motion";
 import { getAnalyticsSummary, AnalyticsSummary } from "@/lib/api";
 import { AppShell } from "@/components/app-shell";
 
-const SUBJECT_MASTERY_DATA = [
-  { subject: "Operating Systems", mastery: 68, fullMark: 100 },
-  { subject: "Data Structures", mastery: 84, fullMark: 100 },
-  { subject: "Algorithms", mastery: 55, fullMark: 100 },
-  { subject: "Databases", mastery: 90, fullMark: 100 },
-  { subject: "Computer Networks", mastery: 72, fullMark: 100 }
-];
-
 const STUDY_METHOD_DATA = [
   { name: "AI Tutor Chat", value: 40, color: "#8B5CF6" },
   { name: "PDF Summaries", value: 25, color: "#EC4899" },
   { name: "Practice Quizzes", value: 20, color: "#10B981" },
   { name: "Podcasts & Audio", value: 15, color: "#3B82F6" }
-];
-
-const WEEKLY_DETAIL_DATA = [
-  { day: "Mon", hours: 1.5, score: 72, quizzes: 1 },
-  { day: "Tue", hours: 2.8, score: 78, quizzes: 2 },
-  { day: "Wed", hours: 2.0, score: 85, quizzes: 1 },
-  { day: "Thu", hours: 4.2, score: 80, quizzes: 3 },
-  { day: "Fri", hours: 3.5, score: 88, quizzes: 2 },
-  { day: "Sat", hours: 5.0, score: 92, quizzes: 4 },
-  { day: "Sun", hours: 4.5, score: 95, quizzes: 3 }
 ];
 
 const RECOMMENDED_TOPICS = [
@@ -71,6 +53,27 @@ export default function AnalyticsPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [status, setStatus] = useState("Connecting to backend analytics service...");
   const [activeChartTab, setActiveChartTab] = useState<"hours" | "quizzes">("hours");
+
+  const hoursMultiplier = summary?.study_hours ?? 18.5;
+  const quizScoreBase = summary?.quiz_score ? parseInt(summary.quiz_score) : 82;
+
+  const WEEKLY_DETAIL_DATA = [
+    { day: "Mon", hours: Number((hoursMultiplier * 0.08).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.88)), quizzes: 1 },
+    { day: "Tue", hours: Number((hoursMultiplier * 0.15).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.95)), quizzes: 2 },
+    { day: "Wed", hours: Number((hoursMultiplier * 0.10).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.0)), quizzes: 1 },
+    { day: "Thu", hours: Number((hoursMultiplier * 0.22).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.97)), quizzes: 3 },
+    { day: "Fri", hours: Number((hoursMultiplier * 0.18).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.05)), quizzes: 2 },
+    { day: "Sat", hours: Number((hoursMultiplier * 0.15).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.1)), quizzes: 4 },
+    { day: "Sun", hours: Number((hoursMultiplier * 0.12).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.15)), quizzes: 3 }
+  ];
+
+  const SUBJECT_MASTERY_DATA = [
+    { subject: "Operating Systems", mastery: Math.min(100, Math.round(quizScoreBase * 0.83)), fullMark: 100 },
+    { subject: "Data Structures", mastery: Math.min(100, Math.round(quizScoreBase * 1.02)), fullMark: 100 },
+    { subject: "Algorithms", mastery: Math.min(100, Math.round(quizScoreBase * 0.67)), fullMark: 100 },
+    { subject: "Databases", mastery: Math.min(100, Math.round(quizScoreBase * 1.10)), fullMark: 100 },
+    { subject: "Computer Networks", mastery: Math.min(100, Math.round(quizScoreBase * 0.88)), fullMark: 100 }
+  ];
 
   useEffect(() => {
     getAnalyticsSummary()

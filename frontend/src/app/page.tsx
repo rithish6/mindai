@@ -41,21 +41,24 @@ const STUDY_QUOTES = [
   { text: "Do not wait for opportunities, create them.", author: "Anonymous" }
 ];
 
-const ANALYTICS_DATA = [
-  { day: "Mon", hours: 1.5, score: 72 },
-  { day: "Tue", hours: 2.8, score: 78 },
-  { day: "Wed", hours: 2.0, score: 85 },
-  { day: "Thu", hours: 4.2, score: 80 },
-  { day: "Fri", hours: 3.5, score: 88 },
-  { day: "Sat", hours: 5.0, score: 92 },
-  { day: "Sun", hours: 4.5, score: 95 }
-];
-
 export default function Home() {
   const router = useRouter();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [activeChartTab, setActiveChartTab] = useState<"hours" | "score">("hours");
+
+  const hoursMultiplier = stats?.study_hours ?? 18.5;
+  const quizScoreBase = stats?.quiz_score ? parseInt(stats.quiz_score) : 82;
+
+  const ANALYTICS_DATA = [
+    { day: "Mon", hours: Number((hoursMultiplier * 0.08).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.88)) },
+    { day: "Tue", hours: Number((hoursMultiplier * 0.15).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.95)) },
+    { day: "Wed", hours: Number((hoursMultiplier * 0.10).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.0)) },
+    { day: "Thu", hours: Number((hoursMultiplier * 0.22).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.97)) },
+    { day: "Fri", hours: Number((hoursMultiplier * 0.18).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.05)) },
+    { day: "Sat", hours: Number((hoursMultiplier * 0.15).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.1)) },
+    { day: "Sun", hours: Number((hoursMultiplier * 0.12).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 1.15)) }
+  ];
   
   // Interactive quote generator
   const [quoteIndex, setQuoteIndex] = useState(0);
