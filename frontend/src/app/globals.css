@@ -12,7 +12,10 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
+  overflow: hidden;
   margin: 0;
   background: #0B0B0F;
   color: #F8FAFC;

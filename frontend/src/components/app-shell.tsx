@@ -32,13 +32,13 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
   const { signOut } = useAuth();
 
   return (
-    <main className="h-screen bg-background text-text overflow-hidden relative">
+    <main className="h-screen w-screen bg-background text-text overflow-hidden relative flex flex-col">
       {/* Decorative gradient blobs in the background */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/20 blur-[120px] pointer-events-none" />
 
-      <div className="grid h-screen grid-cols-1 lg:grid-cols-[260px_1fr] relative z-10 overflow-hidden">
-        <aside className="border-b border-border bg-surface/50 backdrop-blur-xl px-4 py-6 lg:border-b-0 lg:border-r flex flex-col h-full overflow-hidden">
+      <div className="grid h-full grid-cols-1 lg:grid-cols-[260px_1fr] relative z-10 flex-1 overflow-hidden">
+        <aside className="border-b border-border bg-surface/50 backdrop-blur-xl px-4 py-6 lg:border-b-0 lg:border-r flex flex-col h-full">
           <Link href="/" className="flex items-center gap-3 px-2 mb-8">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-ai text-white shadow-glow">
               <Sparkles size={18} aria-hidden="true" />
