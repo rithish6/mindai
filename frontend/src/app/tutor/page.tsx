@@ -20,7 +20,7 @@ export default function TutorPage() {
   const [question, setQuestion] = useState("");
   const [isSending, setIsSending] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getMaterials().then(mats => {
@@ -33,7 +33,9 @@ export default function TutorPage() {
 
   // Scroll to bottom helper
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -151,7 +153,7 @@ export default function TutorPage() {
           {/* Decorative glow */}
           <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
-          <div className="grid gap-6 flex-1 overflow-y-auto pr-4 mb-6 relative z-10 custom-scrollbar">
+          <div ref={chatContainerRef} className="grid gap-6 flex-1 overflow-y-auto pr-4 mb-6 relative z-10 custom-scrollbar">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="w-16 h-16 rounded-2xl bg-white/5 border border-border flex items-center justify-center mb-6 text-primary">
@@ -198,7 +200,6 @@ export default function TutorPage() {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
           
           <form className="mt-auto flex gap-3 relative z-10" onSubmit={handleSubmit}>
