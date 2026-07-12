@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload, Podcast, BookOpen } from "lucide-react";
@@ -30,6 +30,10 @@ type AppShellProps = {
 export function AppShell({ eyebrow, title, children }: AppShellProps) {
   const pathname = usePathname();
   const { signOut } = useAuth();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <main className="h-screen w-screen bg-background text-text overflow-hidden relative flex flex-col">
