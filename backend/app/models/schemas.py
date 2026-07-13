@@ -12,7 +12,8 @@ class Material(BaseModel):
 
 
 class GeneratedResourceRequest(BaseModel):
-    material_id: str
+    material_id: Optional[str] = None
+    material_ids: Optional[list[str]] = None
     resource_type: str = Field(pattern="^(notes|summary|flashcards|quiz|mindmap|podcast)$")
     language: str = "English"
 

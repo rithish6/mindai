@@ -3,11 +3,12 @@
 import { ReactNode, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload, Podcast, BookOpen } from "lucide-react";
+import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload, Podcast, BookOpen, Notebook } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
+  { label: "Notebook Workspace", href: "/notebook", icon: Notebook },
   { label: "Materials", href: "/materials", icon: Upload },
   { label: "PDF Summary", href: "/summary", icon: BookOpen },
   { label: "AI Tutor", href: "/tutor", icon: Brain },

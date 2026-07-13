@@ -105,10 +105,16 @@ export function getAnalyticsSummary() {
   return request<AnalyticsSummary>(`/analytics/summary?t=${Date.now()}`);
 }
 
-export function generateResource(materialId: string, resourceType: string, language: string = "English") {
+export function generateResource(materialId: string | string[], resourceType: string, language: string = "English") {
+  const body: any = { resource_type: resourceType, language };
+  if (Array.isArray(materialId)) {
+    body.material_ids = materialId;
+  } else {
+    body.material_id = materialId;
+  }
   return request<{ content: string[]; status: string }>("/generate", {
     method: "POST",
-    body: JSON.stringify({ material_id: materialId, resource_type: resourceType, language })
+    body: JSON.stringify(body)
   });
 }
 
