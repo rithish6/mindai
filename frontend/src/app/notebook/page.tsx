@@ -161,7 +161,9 @@ export default function NotebookPage() {
 
   // Scroll to bottom of chat
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, isChatSending]);
 
   // Handle voices loading
@@ -831,8 +833,8 @@ export default function NotebookPage() {
           <div className="absolute top-[-30%] right-[-20%] w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
 
           {/* Tab Navigation header */}
-          <div className="flex flex-wrap items-center justify-between border-b border-border pb-3 shrink-0 gap-4">
-            <div className="flex flex-wrap bg-white/5 border border-border p-1 rounded-xl">
+          <div className="flex items-center justify-between border-b border-border pb-2 shrink-0 overflow-x-auto custom-scrollbar">
+            <div className="flex bg-white/5 border border-border p-1 rounded-xl shrink-0">
               {[
                 { id: "chat", label: "AI Tutor Chat", icon: BrainCircuit },
                 { id: "guide", label: "Study Guide", icon: BookOpen },
@@ -850,21 +852,21 @@ export default function NotebookPage() {
                       stopPodcastPlayback();
                       setActiveTab(tab.id as any);
                     }}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       isActive 
                         ? "bg-primary text-white shadow-glow" 
                         : "text-textMuted hover:text-white"
                     }`}
                   >
-                    <Icon size={14} />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <Icon size={14} className={isActive ? "text-white" : "text-textMuted"} />
+                    <span className="inline">{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
             {/* Language Selector */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 ml-4">
               <span className="text-[10px] font-black uppercase tracking-wider text-textMuted">Language:</span>
               <select
                 value={selectedLanguage}
