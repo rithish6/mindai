@@ -54,8 +54,8 @@ export default function AnalyticsPage() {
   const [status, setStatus] = useState("Connecting to backend analytics service...");
   const [activeChartTab, setActiveChartTab] = useState<"hours" | "quizzes">("hours");
 
-  const hoursMultiplier = summary?.study_hours ?? 18.5;
-  const quizScoreBase = summary?.quiz_score ? parseInt(summary.quiz_score) : 82;
+  const hoursMultiplier = summary?.study_hours ?? 0;
+  const quizScoreBase = summary?.quiz_score ? parseInt(summary.quiz_score) : 0;
 
   const WEEKLY_DETAIL_DATA = [
     { day: "Mon", hours: Number((hoursMultiplier * 0.08).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.88)), quizzes: 1 },

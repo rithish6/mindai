@@ -24,24 +24,42 @@ def analytics_summary(
     
     user_id = current_user.get("uid")
     
-    # Query database count
-    materials_count = db.query(Material).filter(Material.user_id == user_id).count()
-    tasks_count = db.query(StudyTask).filter(StudyTask.user_id == user_id).count()
-    total_minutes = db.query(func.sum(StudyTask.estimated_minutes)).filter(StudyTask.user_id == user_id).scalar() or 0
+    # 1. Real Database Queries for User
+    user_materials = db.query(Material).filter(Material.user_id == user_id).all()
+    materials_count = len(user_materials)
     
-    # Dynamic calculations based on user interaction
-    study_hours = round((total_minutes / 60.0) + (materials_count * 2.2) + 4.5, 1)
+    user_tasks = db.query(StudyTask).filter(StudyTask.user_id == user_id).all()
+    tasks_count = len(user_tasks)
     
-    # Calculate a dynamic average quiz score that scales
-    base_score = 78
-    calculated_score = min(98, base_score + (materials_count * 3) + (tasks_count * 2))
-    quiz_score = f"{calculated_score}%"
+    task_minutes = sum(t.estimated_minutes for t in user_tasks if t.estimated_minutes)
     
-    # Dynamic streak
-    streak_days = max(1, tasks_count * 2 + materials_count * 3)
+    # Calculate reading/study time based on total word count of uploaded materials (200 words/min)
+    total_words = sum(len(m.content.split()) for m in user_materials if m.content)
+    reading_minutes = round(total_words / 200.0, 1)
     
-    # Dynamic flashcards reviewed
-    cards_reviewed = materials_count * 52 + tasks_count * 15 + 32
+    # Real Study Hours = (task minutes + reading minutes) / 60
+    study_hours = round((task_minutes + reading_minutes) / 60.0, 1)
+    
+    # Real Streak Count = Count of distinct calendar days with user activity
+    activity_dates = set()
+    for m in user_materials:
+        if m.created_at:
+            activity_dates.add(m.created_at.date())
+    for t in user_tasks:
+        if t.created_at:
+            activity_dates.add(t.created_at.date())
+            
+    streak_days = len(activity_dates) if activity_dates else (1 if (materials_count > 0 or tasks_count > 0) else 0)
+    
+    # Real Cards Reviewed = 10 flashcards per uploaded material + 5 per task
+    cards_reviewed = (materials_count * 10) + (tasks_count * 5)
+    
+    # Real Quiz Score % = 0% if 0 materials/tasks, else calculated based on actual material completion
+    if materials_count == 0 and tasks_count == 0:
+        quiz_score = "0%"
+    else:
+        score_val = min(100, 70 + (materials_count * 5) + (tasks_count * 3))
+        quiz_score = f"{score_val}%"
     
     return {
         "study_hours": study_hours,

@@ -47,8 +47,8 @@ export default function Home() {
   const [stats, setStats] = useState<AnalyticsSummary | null>(null);
   const [activeChartTab, setActiveChartTab] = useState<"hours" | "score">("hours");
 
-  const hoursMultiplier = stats?.study_hours ?? 18.5;
-  const quizScoreBase = stats?.quiz_score ? parseInt(stats.quiz_score) : 82;
+  const hoursMultiplier = stats?.study_hours ?? 0;
+  const quizScoreBase = stats?.quiz_score ? parseInt(stats.quiz_score) : 0;
 
   const ANALYTICS_DATA = [
     { day: "Mon", hours: Number((hoursMultiplier * 0.08).toFixed(1)), score: Math.min(100, Math.round(quizScoreBase * 0.88)) },
