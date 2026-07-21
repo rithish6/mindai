@@ -9,3 +9,6 @@ firebase-admin==6.5.0
 pymupdf
 google-genai
 requests
+python-pptx
+python-docx
+openpyxl

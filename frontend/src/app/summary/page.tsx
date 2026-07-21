@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, BookOpen, Download, HelpCircle, FileText } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, BookOpen, Download, HelpCircle, FileText, Upload, Plus } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { AppShell } from "@/components/app-shell";
-import { generateResource, getMaterials, Material, API_BASE_URL } from "@/lib/api";
+import { generateResource, getMaterials, uploadMaterial, Material, API_BASE_URL } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 
 const LANGUAGES = [
@@ -25,17 +25,43 @@ export default function SummaryPage() {
   const [markdownContent, setMarkdownContent] = useState<string>("");
   const [status, setStatus] = useState("Select a material to generate a summary.");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    fetchMaterials();
+  }, []);
+
+  const fetchMaterials = () => {
     getMaterials()
       .then((mats) => {
         setMaterials(mats);
-        if (mats.length > 0) {
+        if (mats.length > 0 && !selectedMaterialId) {
           setSelectedMaterialId(mats[0].id);
         }
       })
       .catch((err) => console.error("Failed to fetch materials", err));
-  }, []);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setStatus("Uploading & parsing document contents...");
+
+    try {
+      const uploaded = await uploadMaterial(file);
+      setMaterials(prev => [uploaded, ...prev]);
+      setSelectedMaterialId(uploaded.id);
+      setStatus(`Uploaded "${uploaded.title}" successfully! Click Generate Summary.`);
+    } catch (err: any) {
+      setStatus(err.message || "Upload failed.");
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
 
   async function handleGenerate() {
     if (!selectedMaterialId) return;
@@ -144,6 +170,31 @@ export default function SummaryPage() {
                 </option>
               ))}
             </select>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept=".pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls,.txt,.md,.json,.csv,.png,.jpg,.jpeg,.mp3,.wav,.mp4"
+            />
+            <button
+              onClick={() => !isUploading && fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="mt-3 flex items-center justify-center gap-2 h-9 w-full rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-semibold text-white transition-all disabled:opacity-50"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 size={13} className="animate-spin text-primary" />
+                  <span>Uploading file...</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={13} />
+                  <span>Upload File (PDF, PPTX, DOCX...)</span>
+                </>
+              )}
+            </button>
 
             <h2 className="text-lg font-bold mt-6 text-white mb-4">Output Language</h2>
             <select

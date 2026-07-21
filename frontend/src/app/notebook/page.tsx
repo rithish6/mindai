@@ -812,7 +812,7 @@ export default function NotebookPage() {
               ref={fileInputRef}
               onChange={handleUploadSource}
               className="hidden"
-              accept=".pdf,.txt,.md,.mp3,.wav,.mp4"
+              accept=".pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls,.txt,.md,.json,.csv,.png,.jpg,.jpeg,.mp3,.wav,.mp4"
             />
             <button
               onClick={() => !isUploading && fileInputRef.current?.click()}
