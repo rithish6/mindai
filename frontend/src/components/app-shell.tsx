@@ -2,9 +2,10 @@
 
 import { ReactNode, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, Bell, Brain, CalendarDays, FileText, GraduationCap, Home, Layers3, Settings, Sparkles, Upload, Podcast, BookOpen, Notebook } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import OptionWheel from "./OptionWheel";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
@@ -30,6 +31,7 @@ type AppShellProps = {
 
 export function AppShell({ eyebrow, title, children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useAuth();
 
   useEffect(() => {
@@ -59,27 +61,35 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
             </div>
           </Link>
 
-          <nav className="grid gap-1 flex-1 overflow-y-auto pr-2 pb-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? "bg-primary/15 text-primary border border-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.1)]" 
-                      : "text-textMuted hover:bg-white/5 hover:text-text"
-                  }`}
-                >
-                  <Icon size={18} aria-hidden="true" className={isActive ? "text-primary" : "text-textMuted"} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="flex-1 min-h-[300px] relative overflow-hidden my-4">
+            <OptionWheel
+              items={navItems.map(item => item.label)}
+              icons={navItems.map(item => {
+                const Icon = item.icon;
+                return <Icon size={16} key={item.label} />;
+              })}
+              defaultSelected={Math.max(0, navItems.findIndex(item => item.href === pathname))}
+              onChange={(idx) => {
+                const targetUrl = navItems[idx].href;
+                if (pathname !== targetUrl) {
+                  router.push(targetUrl);
+                }
+              }}
+              textColor="#94a3b8"
+              activeColor="#8b5cf6"
+              fontSize={0.95}
+              spacing={2.0}
+              curve={1.2}
+              tilt={6}
+              blur={0}
+              fade={0.3}
+              minOpacity={0.15}
+              smoothing={200}
+              inset={12}
+              loop={false}
+              draggable={true}
+            />
+          </div>
           
           <div className="mt-auto pt-4 border-t border-border">
             <button 

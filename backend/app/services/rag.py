@@ -29,6 +29,7 @@ def answer_with_context(
     answer_text, sources = ask_ai_tutor(
         payload.question, 
         material_data,
+        chat_history=payload.chat_history,
         custom_gemini_key=custom_gemini_key,
         custom_openai_key=custom_openai_key
     )

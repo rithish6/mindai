@@ -21,6 +21,7 @@ class GeneratedResourceRequest(BaseModel):
 class TutorQuestion(BaseModel):
     material_ids: list[str]
     question: str
+    chat_history: Optional[list[dict]] = None
 
 
 class TutorAnswer(BaseModel):

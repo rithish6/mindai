@@ -180,18 +180,35 @@ def generate_study_content(title: str, content: Optional[str], resource_type: st
             logger.error(f"Error generating content via Gemini: {e}")
             handle_ai_error(e)
 
-def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]], custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None) -> tuple[str, list[str]]:
+MASTER_TUTOR_SYSTEM_PROMPT = (
+    "You are SnapLearn AI, an elite, world-class personal AI tutor powered by top-tier reasoning capabilities matching GPT-4o and Gemini Pro.\n\n"
+    "Your goal is to provide exceptional, thorough, highly accurate, and engaging educational responses that make complex subjects effortlessly understandable.\n\n"
+    "STRICT OUTPUT REQUIREMENTS:\n"
+    "1. 🎯 Clear Structure & Beautiful Formatting: Use rich Markdown formatting extensively. Structure your responses with clear headers (##, ###), bold key terms (**term**), clean bullet points, numbered step-by-step breakdowns, code blocks, callouts, and comparison tables where helpful.\n"
+    "2. 💡 In-Depth & Intuitive Explanations: Never give brief or superficial answers. Break down complex logic step-by-step and explain the underlying reasoning.\n"
+    "3. 📝 Real-World Examples & Analogies: Provide at least one clear, relatable real-world example or intuitive analogy for abstract concepts.\n"
+    "4. 📌 Source Grounding & Citations: Ground your response in the provided study materials. Reference specific concepts using [Source: Title] where applicable.\n"
+    "5. ❓ Proactive Follow-up Prompts: Conclude your answer with 2 relevant follow-up practice questions or prompts to deepen the student's mastery."
+)
+
+def ask_ai_tutor(
+    question: str, 
+    materials: list[tuple[str, Optional[str]]], 
+    chat_history: Optional[list[dict]] = None,
+    custom_gemini_key: Optional[str] = None, 
+    custom_openai_key: Optional[str] = None
+) -> tuple[str, list[str]]:
     """
-    Answers a question based on the provided materials [(title, content)].
+    Answers a question based on the provided materials [(title, content)] and optional chat history.
     Returns a tuple of (answer, sources).
     """
-    material_texts = "\n\n".join([f"--- {title} ---\n{content if content else 'No content provided.'}" for title, content in materials])
+    material_texts = "\n\n".join([f"--- Source: {title} ---\n{content if content else 'No content provided.'}" for title, content in materials])
     material_titles = [m[0] for m in materials]
     
     prompt = (
-        f"You are a helpful AI tutor. A student is asking: '{question}'.\n"
-        f"They are currently studying the following materials:\n\n{material_texts}\n\n"
-        "Provide a clear, educational answer based on the materials provided."
+        f"A student is asking: '{question}'.\n\n"
+        f"They are studying the following source materials:\n{material_texts}\n\n"
+        "Provide a comprehensive, beautifully formatted educational answer adhering to SnapLearn AI tutor standards."
     )
     
     provider = get_ai_provider(custom_gemini_key, custom_openai_key)
@@ -203,13 +220,25 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]], cust
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             }
+            messages = [{"role": "system", "content": MASTER_TUTOR_SYSTEM_PROMPT}]
+            if chat_history:
+                for msg in chat_history[-6:]:
+                    role = "user" if msg.get("role") in ["Student", "user"] else "assistant"
+                    content = msg.get("text") or msg.get("content") or ""
+                    if content:
+                        messages.append({"role": role, "content": content})
+            messages.append({"role": "user", "content": prompt})
+
             payload = {
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
+                "model": "gpt-4o",
+                "messages": messages,
+                "temperature": 0.5
             }
             res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            if not res.ok:
+                # Fallback to gpt-4o-mini if gpt-4o fails
+                payload["model"] = "gpt-4o-mini"
+                res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
             res.raise_for_status()
             res_data = res.json()
             answer = res_data["choices"][0]["message"]["content"]
@@ -220,9 +249,22 @@ def ask_ai_tutor(question: str, materials: list[tuple[str, Optional[str]]], cust
     else:
         # Gemini flow with fallback rotation
         def _ask(g_client):
+            contents = []
+            if chat_history:
+                for msg in chat_history[-6:]:
+                    role = "user" if msg.get("role") in ["Student", "user"] else "model"
+                    content = msg.get("text") or msg.get("content") or ""
+                    if content:
+                        contents.append({"role": role, "parts": [{"text": content}]})
+            contents.append({"role": "user", "parts": [{"text": prompt}]})
+
             response = g_client.models.generate_content(
                 model='gemini-2.5-flash',
-                contents=prompt,
+                contents=contents,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=MASTER_TUTOR_SYSTEM_PROMPT,
+                    temperature=0.5
+                )
             )
             return (response.text, material_titles)
 
@@ -237,7 +279,10 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
     Solves a doubt based on an uploaded image and an optional question.
     Uses multimodal capabilities of OpenAI or Gemini.
     """
-    prompt = f"You are an expert tutor. Please analyze this image and help me solve my doubt. {question}"
+    prompt = (
+        f"{MASTER_TUTOR_SYSTEM_PROMPT}\n\n"
+        f"Analyze this image and solve the student's doubt. Question: {question if question else 'Explain and solve this problem step-by-step.'}"
+    )
     
     provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     
@@ -250,7 +295,7 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
                 "Content-Type": "application/json"
             }
             payload = {
-                "model": "gpt-4o-mini",
+                "model": "gpt-4o",
                 "messages": [
                     {
                         "role": "user",
@@ -267,6 +312,9 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
                 ]
             }
             res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+            if not res.ok:
+                payload["model"] = "gpt-4o-mini"
+                res = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
             res.raise_for_status()
             res_data = res.json()
             return res_data["choices"][0]["message"]["content"]
@@ -284,7 +332,11 @@ def solve_image_doubt(image_bytes: bytes, mime_type: str, question: str, custom_
                         "mime_type": mime_type,
                         "data": image_bytes
                     }
-                ]
+                ],
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=MASTER_TUTOR_SYSTEM_PROMPT,
+                    temperature=0.4
+                )
             )
             return response.text
 
@@ -348,7 +400,12 @@ def transcribe_media(media_bytes: bytes, mime_type: str, custom_gemini_key: Opti
             logger.error(f"Error transcribing media via Gemini: {e}")
             handle_ai_error(e)
 
-def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None, custom_openai_key: Optional[str] = None):
+def call_openai_chat_stream(
+    prompt: str, 
+    system_message: Optional[str] = None, 
+    chat_history: Optional[list[dict]] = None,
+    custom_openai_key: Optional[str] = None
+):
     key = custom_openai_key or os.environ.get("OPENAI_API_KEY") or settings.openai_api_key
     if not key:
         raise ValueError("OpenAI API Key is not configured. Please set the OPENAI_API_KEY environment variable.")
@@ -359,17 +416,29 @@ def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None, c
     }
     
     messages = []
-    if system_message:
-        messages.append({"role": "system", "content": system_message})
+    sys_msg = system_message or MASTER_TUTOR_SYSTEM_PROMPT
+    messages.append({"role": "system", "content": sys_msg})
+    
+    if chat_history:
+        for msg in chat_history[-6:]:
+            role = "user" if msg.get("role") in ["Student", "user"] else "assistant"
+            content = msg.get("text") or msg.get("content") or ""
+            if content:
+                messages.append({"role": role, "content": content})
+
     messages.append({"role": "user", "content": prompt})
     
     payload = {
-        "model": "gpt-4o-mini",
+        "model": "gpt-4o",
         "messages": messages,
+        "temperature": 0.5,
         "stream": True
     }
     
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, stream=True)
+    if not response.ok:
+        payload["model"] = "gpt-4o-mini"
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, stream=True)
     response.raise_for_status()
     
     for line in response.iter_lines():
@@ -387,13 +456,35 @@ def call_openai_chat_stream(prompt: str, system_message: Optional[str] = None, c
                 except Exception:
                     pass
 
-def call_gemini_chat_stream(prompt: str, custom_gemini_key: Optional[str] = None):
+def call_gemini_chat_stream(
+    prompt: str, 
+    system_message: Optional[str] = None,
+    chat_history: Optional[list[dict]] = None,
+    custom_gemini_key: Optional[str] = None
+):
     keys = get_all_gemini_keys(custom_gemini_key)
+    sys_instruction = system_message or MASTER_TUTOR_SYSTEM_PROMPT
+
+    contents = []
+    if chat_history:
+        for msg in chat_history[-6:]:
+            role = "user" if msg.get("role") in ["Student", "user"] else "model"
+            content = msg.get("text") or msg.get("content") or ""
+            if content:
+                contents.append({"role": role, "parts": [{"text": content}]})
+    contents.append({"role": "user", "parts": [{"text": prompt}]})
+
+    config = genai.types.GenerateContentConfig(
+        system_instruction=sys_instruction,
+        temperature=0.5
+    )
+
     if not keys:
         if client:
             response = client.models.generate_content_stream(
                 model='gemini-2.5-flash',
-                contents=prompt,
+                contents=contents,
+                config=config
             )
             for chunk in response:
                 if chunk.text:
@@ -407,7 +498,8 @@ def call_gemini_chat_stream(prompt: str, custom_gemini_key: Optional[str] = None
             temp_client = genai.Client(api_key=key)
             response = temp_client.models.generate_content_stream(
                 model='gemini-2.5-flash',
-                contents=prompt,
+                contents=contents,
+                config=config
             )
             # Try to fetch the first chunk to ensure connection/quota succeeds
             iterator = iter(response)
@@ -433,9 +525,15 @@ def call_gemini_chat_stream(prompt: str, custom_gemini_key: Optional[str] = None
     if last_exception:
         raise last_exception
 
-def stream_ai_response(prompt: str, system_message: Optional[str] = None, custom_gemini_key: Optional[str] = None, custom_openai_key: Optional[str] = None):
+def stream_ai_response(
+    prompt: str, 
+    system_message: Optional[str] = None, 
+    chat_history: Optional[list[dict]] = None,
+    custom_gemini_key: Optional[str] = None, 
+    custom_openai_key: Optional[str] = None
+):
     provider = get_ai_provider(custom_gemini_key, custom_openai_key)
     if provider == "openai":
-        yield from call_openai_chat_stream(prompt, system_message, custom_openai_key)
+        yield from call_openai_chat_stream(prompt, system_message, chat_history, custom_openai_key)
     else:
-        yield from call_gemini_chat_stream(prompt, custom_gemini_key)
+        yield from call_gemini_chat_stream(prompt, system_message, chat_history, custom_gemini_key)

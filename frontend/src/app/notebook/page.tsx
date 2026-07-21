@@ -285,10 +285,19 @@ export default function NotebookPage() {
       if (geminiKey) headers["x-gemini-key"] = geminiKey;
       if (openaiKey) headers["x-openai-key"] = openaiKey;
 
+      const chatHistoryPayload = messages.slice(-6).map(m => ({
+        role: m.role,
+        text: m.text
+      }));
+
       const res = await fetch(`${API_BASE_URL}/tutor/ask-stream`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ question: query, material_ids: selectedMaterialIds })
+        body: JSON.stringify({ 
+          question: query, 
+          material_ids: selectedMaterialIds,
+          chat_history: chatHistoryPayload
+        })
       });
 
       if (!res.ok) {

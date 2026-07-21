@@ -99,9 +99,20 @@ def generate_resource_stream(
     context = combined_content if combined_content else f"the topic '{combined_title}'"
     
     if payload.resource_type == "summary":
-        prompt = f"You are an expert tutor. I am studying '{combined_title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a highly detailed, comprehensive, and structured summary. Use beautiful Markdown formatting including headers (h2, h3), bold text, bullet points, numbered lists, tables where relevant, and blockquotes. Make the content extremely clear, understandable, and formatted like a premium GPT-4 answer."
+        prompt = (
+            f"You are SnapLearn AI, a world-class educational AI tutor. I am studying '{combined_title}'.\n\n"
+            f"SOURCE MATERIAL:\n{context}\n\n"
+            "Based ONLY on the source material above, generate a highly comprehensive, beautifully formatted master study guide.\n\n"
+            "REQUIRED SECTIONS & FORMATTING:\n"
+            "1. 📌 **Executive Overview**: High-level synthesis of core themes.\n"
+            "2. 💡 **Core Concepts & Deep Dive**: Step-by-step explanations with bold key terms (**term**) and clear headings (##, ###).\n"
+            "3. 📊 **Key Comparisons / Summary Table**: Create a Markdown table summarizing core differences, formulas, or key variables where applicable.\n"
+            "4. 📝 **Real-World Application & Examples**: Practical illustrations or analogies explaining abstract ideas.\n"
+            "5. 🎯 **Key Takeaways & Exam Tips**: Concise bullet points highlighting critical test concepts.\n\n"
+            "Ensure the formatting is crystal-clear, visually stunning, and equal in quality to a premium GPT-4o output."
+        )
     else:
-        prompt = f"You are an expert tutor. I am studying '{combined_title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a summary of the most important aspects."
+        prompt = f"You are SnapLearn AI tutor. I am studying '{combined_title}'. Here is the source material:\n\n{context}\n\nBased ONLY on the material above, generate a thorough summary of the most important aspects."
         
     prompt += f"\n\nImportant: You must generate the final output entirely in the {payload.language} language."
     

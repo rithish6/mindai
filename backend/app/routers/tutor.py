@@ -59,6 +59,7 @@ def ask_tutor_stream(
             from app.services.ai import stream_ai_response
             for text_chunk in stream_ai_response(
                 prompt,
+                chat_history=payload.chat_history,
                 custom_gemini_key=x_gemini_key,
                 custom_openai_key=x_openai_key
             ):

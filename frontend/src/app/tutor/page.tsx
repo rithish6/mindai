@@ -56,10 +56,19 @@ export default function TutorPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
+      const chatHistoryPayload = messages.slice(-6).map(m => ({
+        role: m.role,
+        text: m.text
+      }));
+
       const res = await fetch(`${API_BASE_URL}/tutor/ask-stream`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ question: trimmed, material_ids: selectedMaterialIds })
+        body: JSON.stringify({ 
+          question: trimmed, 
+          material_ids: selectedMaterialIds,
+          chat_history: chatHistoryPayload 
+        })
       });
 
       if (!res.ok) {
