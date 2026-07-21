@@ -61,12 +61,12 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
             </div>
           </Link>
 
-          <div className="flex-1 min-h-[300px] relative overflow-hidden my-4">
+          <div className="flex-1 min-h-[340px] relative overflow-hidden my-2">
             <OptionWheel
               items={navItems.map(item => item.label)}
               icons={navItems.map(item => {
                 const Icon = item.icon;
-                return <Icon size={16} key={item.label} />;
+                return <Icon size={18} key={item.label} />;
               })}
               defaultSelected={Math.max(0, navItems.findIndex(item => item.href === pathname))}
               onChange={(idx) => {
@@ -75,17 +75,17 @@ export function AppShell({ eyebrow, title, children }: AppShellProps) {
                   router.push(targetUrl);
                 }
               }}
-              textColor="#94a3b8"
-              activeColor="#8b5cf6"
-              fontSize={0.95}
-              spacing={2.0}
-              curve={1.2}
-              tilt={6}
+              textColor="#cbd5e1"
+              activeColor="#c084fc"
+              fontSize={1.15}
+              spacing={2.2}
+              curve={0.1}
+              tilt={0}
               blur={0}
-              fade={0.3}
-              minOpacity={0.15}
-              smoothing={200}
-              inset={12}
+              fade={0.12}
+              minOpacity={0.45}
+              smoothing={180}
+              inset={10}
               loop={false}
               draggable={true}
             />
